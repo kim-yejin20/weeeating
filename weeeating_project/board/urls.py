@@ -3,5 +3,5 @@ from .views import BoardMainView, BoardPostView
 
 urlpatterns = [
     path('', BoardMainView.as_view()),
-    path('/posting', BoardPostView.as_view())
+    path('/posts', BoardPostView.as_view())
 ]
