@@ -4,6 +4,7 @@ import bcrypt
 import jwt
 import requests
 import urllib3
+import sys
 
 from django.http import JsonResponse
 from django.views import View
@@ -55,7 +56,9 @@ class LoginView(View):
 
                 if bcrypt.checkpw(data['password'].encode('utf-8'),db_email.password.encode('utf-8')) == True:
 
-                    token = jwt.encode({'id' : db_email.id},SECRET_KEY,ALGORITHM)
+                    print(jwt)
+                    print(sys.version)
+                    token = jwt.encode({'id' : db_email.id},SECRET_KEY,ALGORITHM).decode()
                     print(token)
                     print(type(token))
 
