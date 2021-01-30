@@ -14,7 +14,6 @@ class LikeStoreView(View): # 음식점 좋아요/안좋아요
         #user_id = request.user.id
         user_id = 1
 
-        data = json.loads(request.body)
 
         store = StoreLike.objects.filter(store_id=store_id, user_id=user_id)
 
@@ -76,6 +75,42 @@ class StoreDetailView(View):
         like = False
 
         return JsonResponse({'store_info' : store_info, 'like_count' : like_count, 'like' : like, 'store_images' : images}, status=200)
+
+
+class StoreCommentView(View):
+    #@decorator
+    def post(self,request,store_id):
+        #user_id = request.user.id
+        user_id = 1
+        data = json.loads(request.body)
+
+        StoreComment.objects.create(
+            comment = data['comment'],
+            store_id = store_id,
+            writer_id = user_id
+        )
+
+        return JsonResponse({'MESSAGE' : 'CREATE_SUCCESS'}, status=200)
+
+    #@decorator
+    def get(self,request,store_id):
+        #user_id = request.user.id
+        user_id = 1
+
+        comments = StoreComment.objects.filter(store_id=store_id).prefetch_related('storecomment_set').all()
+
+        comment_list = [{
+            "id" : comment.id,
+            "comment" : comment.comment,
+            "created_at" : comment.created_at,
+            "writer_id" : comment.id,
+            "writer_name" : comment.name
+        } for comment in comments]
+
+        return JsonResponse({'comment_list' : comment_list},status=200)
+
+
+
 
 
 
