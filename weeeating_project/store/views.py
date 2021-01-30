@@ -34,7 +34,7 @@ class StoreListView(View):
     #@decorator
     def get(self,request):
         #user_id = request.user.id
-        user_id = 1
+        user_id = 1:
 
         stores = Store.objects.prefetch_related('storeimage_set','storelike_set').all()
 
@@ -92,21 +92,23 @@ class StoreCommentView(View):
             writer_id = user_id
         )
 
-        return JsonResponse({'MESSAGE' : 'CREATE_SUCCESS'}, status=200)
+        return JsonResponse({'MESSAGE' : 'CREATE_SUCCESS'}, status=201)
 
     #@decorator
     def get(self,request,store_id):
         #user_id = request.user.id
         user_id = 1
+        offset = 0
+        limit = 5
 
         comments = StoreComment.objects.filter(store_id=store_id).select_related('writer').all()
         comment_list = [{
             "id" : comment.id,
             "comment" : comment.comment,
-            "created_at" : comment.created_at,
+            "created_at" : comment.created_at.strftime("%Y-%m-%d %I:%M"),
             "writer_id" : comment.writer.id,
             "writer_name" : comment.writer.name
-        } for comment in comments]
+        } for comment in comments][::-1][offset:offset+limit]
 
         return JsonResponse({'comment_list' : comment_list},status=200)
 
