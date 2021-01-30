@@ -32,9 +32,7 @@ class BoardView(View):
 
     #@decorator
     def post(self,request):
-        #user_id = request.user.id
-        offset = 0
-        limit = 5
+        #user_id = request.user.id 
         data = json.loads(request.body)
 
         new_board = Board.objects.create(
@@ -52,6 +50,8 @@ class BoardDetailView(View): #상세페이지 조회,수정,삭제
     #@decorator
     def get(self,request,board_id):
         #user_id = request.user.id
+        offset = 0
+        limit = 5
 
         board_info = Board.objects.filter(id = board_id).select_related('writer').prefetch_related('boardcomment_set').all()
 
@@ -73,7 +73,8 @@ class BoardDetailView(View): #상세페이지 조회,수정,삭제
             'comment_writer_id' : comment.writer.id,
             'comment_content' : comment.comment,
             'comment_created_at' : comment.created_at.strftime("%Y-%m-%d %I:%M:%S")}
-            for comment in comments_list]
+            for comment in comments_list][::-1][offset:offset+limit]
+
 
         return JsonResponse({'board_info':board_detail, 'count_comments':count_comments, 'board_comments':board_comments} , status=200)
 
@@ -119,15 +120,6 @@ class BoardCommentView(View): #게시글 댓글(생성,수정,삭제) -> Comment
         )
 
         return JsonResponse({'MESSAGE' : 'COMMENT_CREATE_SUCCESS'},status=201)
-
-    def get(self,request):
-        #user_id = request.user.id
-        user_id = 1
-        store_id = int(request.GET.get("store_id", None))
-        board_id = int(request.GET.get("board_id", None))
-        offset = 0
-        limit = 5
-
 
     #@decorator
     def patch(self,request,board_id,comment_id):

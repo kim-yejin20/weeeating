@@ -84,6 +84,8 @@ class StoreCommentView(View):
         user_id = 1
         data = json.loads(request.body)
 
+        print(data)
+
         StoreComment.objects.create(
             comment = data['comment'],
             store_id = store_id,
