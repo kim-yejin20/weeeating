@@ -10,13 +10,16 @@ from user.models import User
 
 class BoardView(View):
     #@decorator
-    def get(self,request):
-        offset = 0
-        limit = 5
-        recent_list = list(Board.objects.all().select_related('writer').prefetch_related('boardcomment_set'))
-        #user_id = request.user.id
+    def get(self,request): 
+        offset = int(request.GET.get('offset', 0))
+        limit = int(reqeust.GET.get('limit', 5))
 
         total_board = len(Board.objects.all())
+
+        if offset > total_board:
+            return JsonResponse({'MESSAGE' : 'OFFSET_OUT_OF_RANGE'}, status=400)
+
+        recent_list = list(Board.objects.all().select_related('writer').prefetch_related('boardcomment_set'))
 
         board_list =[{
             'id' : board.id,
@@ -52,6 +55,8 @@ class BoardDetailView(View): #상세페이지 조회,수정,삭제
     #@decorator
     def get(self,request,board_id):
         #user_id = request.user.id
+        offset = int(request.GET.get('offset', 0))
+        limit = int(reqeust.GET.get('limit', 5))
 
         board_info = Board.objects.filter(id = board_id).select_related('writer').prefetch_related('boardcomment_set').all()
 
@@ -72,8 +77,8 @@ class BoardDetailView(View): #상세페이지 조회,수정,삭제
             'comment_writer' : comment.writer.name,
             'comment_writer_id' : comment.writer.id,
             'comment_content' : comment.comment,
-            'comment_created_at' : comment.created_at.strftime("%Y-%m-%d %I:%M:%S")}
-            for comment in comments_list]
+            'comment_created_at' : comment.created_at.strftime("%Y-%m-%d %I:%M")}
+            for comment in comments_list][::-1][offset:offset+limit]
 
         return JsonResponse({'board_info':board_detail, 'count_comments':count_comments, 'board_comments':board_comments} , status=200)
 
@@ -119,15 +124,6 @@ class BoardCommentView(View): #게시글 댓글(생성,수정,삭제) -> Comment
         )
 
         return JsonResponse({'MESSAGE' : 'COMMENT_CREATE_SUCCESS'},status=201)
-
-    def get(self,request):
-        #user_id = request.user.id
-        user_id = 1
-        store_id = int(request.GET.get("store_id", None))
-        board_id = int(request.GET.get("board_id", None))
-        offset = 0
-        limit = 5
-
 
     #@decorator
     def patch(self,request,board_id,comment_id):
