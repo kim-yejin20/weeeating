@@ -145,18 +145,5 @@ class StoreCommentView(View):
 
 
 
-"""
-class LikeRanking(View):
-    #@decorator
-    def get(self, requsest):
-        #user_id = request.user.id
-        user_id = 1
-"""
-
-
-
-
-
-
 
 
