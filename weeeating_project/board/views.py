@@ -35,9 +35,7 @@ class BoardView(View):
 
     #@decorator
     def post(self,request):
-        #user_id = request.user.id
-        offset = 0
-        limit = 5
+        #user_id = request.user.id 
         data = json.loads(request.body)
 
         new_board = Board.objects.create(
