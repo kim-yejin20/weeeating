@@ -8,7 +8,6 @@ from django.views import View
 from .models import Board, BoardComment
 from user.models import User
 
-#깃
 class BoardView(View):
     #@decorator
     def get(self,request):
@@ -63,7 +62,7 @@ class BoardDetailView(View): #상세페이지 조회,수정,삭제
             'writer_id' : board.writer.id,
             'writer' : board.writer.name,
             'content' : board.content,
-            'create_at' : board.created_at.date()
+            'created_at' : board.created_at.date()
         } for board in board_info]
 
         count_comments = len(comments_list)
@@ -103,12 +102,15 @@ class BoardDetailView(View): #상세페이지 조회,수정,삭제
             return JsonResponse({'MESSAGE' : 'DELETE_SUCCESS'}, status=200)
         return JsonResponse({'MESSAGE' : 'ACCESS_DENIED'}, status=403)
 
-class BoardCommentView(View): #게시글 댓글(생성,수정,삭제)
+class BoardCommentView(View): #게시글 댓글(생성,수정,삭제) -> CommentView로 수정하기
+
     #@decorator
     def post(self,request,board_id):
         #user_id = request.user.id
         user_id = 1
         data = json.loads(request.body)
+
+        print(data)
 
         BoardComment.objects.create(
             board_id = board_id,
@@ -117,6 +119,15 @@ class BoardCommentView(View): #게시글 댓글(생성,수정,삭제)
         )
 
         return JsonResponse({'MESSAGE' : 'COMMENT_CREATE_SUCCESS'},status=201)
+
+    def get(self,request):
+        #user_id = request.user.id
+        user_id = 1
+        store_id = int(request.GET.get("store_id", None))
+        board_id = int(request.GET.get("board_id", None))
+        offset = 0
+        limit = 5
+
 
     #@decorator
     def patch(self,request,board_id,comment_id):
