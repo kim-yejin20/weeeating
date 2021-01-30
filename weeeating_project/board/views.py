@@ -12,7 +12,7 @@ class BoardView(View):
     #@decorator
     def get(self,request): 
         offset = int(request.GET.get('offset', 0))
-        limit = int(reqeust.GET.get('limit', 5))
+        limit = int(request.GET.get('limit', 5))
 
         total_board = len(Board.objects.all())
 
