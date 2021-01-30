@@ -34,7 +34,7 @@ class StoreListView(View):
     #@decorator
     def get(self,request):
         #user_id = request.user.id
-        user_id = 1:
+        user_id = 1
 
         stores = Store.objects.prefetch_related('storeimage_set','storelike_set').all()
 
