@@ -54,7 +54,7 @@ class BoardDetailView(View): #상세페이지 조회,수정,삭제
     def get(self,request,board_id):
         #user_id = request.user.id
         offset = int(request.GET.get('offset', 0))
-        limit = int(reqeust.GET.get('limit', 5))
+        limit = int(request.GET.get('limit', 5))
 
         board_info = Board.objects.filter(id = board_id).select_related('writer').prefetch_related('boardcomment_set').all()
 
