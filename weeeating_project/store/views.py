@@ -97,17 +97,43 @@ class StoreCommentView(View):
         #user_id = request.user.id
         user_id = 1
 
-        comments = StoreComment.objects.filter(store_id=store_id).prefetch_related('storecomment_set').all()
-
+        comments = StoreComment.objects.filter(store_id=store_id).select_related('writer').all()
         comment_list = [{
             "id" : comment.id,
             "comment" : comment.comment,
             "created_at" : comment.created_at,
-            "writer_id" : comment.id,
-            "writer_name" : comment.name
+            "writer_id" : comment.writer.id,
+            "writer_name" : comment.writer.name
         } for comment in comments]
 
         return JsonResponse({'comment_list' : comment_list},status=200)
+
+    #@decorator
+    def patch(self,request,store_id,comment_id):
+        #user_id = request.user.id
+        user_id = 1
+        data = json.loads(request.body)
+        comment = StoreComment.objects.get(id = comment_id)
+
+        if comment.writer_id == user_id :
+            StoreComment.objects.filter(id=comment_id).update(
+                comment = data['comment']
+            )
+            return JsonResponse({'MESSAGE' : 'UPDATE_SUCCESS'},status =200)
+        return JsonResponse({'MESSAGE' : 'ACCESS_DENIED'}, status=403)
+
+    #@decorator
+    def delete(self,request,store_id,comment_id):
+        #user_id = request.user.id
+        user_id = 1
+
+        comment = StoreComment.objects.get(id = comment_id)
+
+        if comment.writer_id == user_id : 
+            comment.delete()
+
+            return JsonResponse({'MESSAGE' : 'DELETE_SUCCESS'},status=200)
+        return JSonResponse({'MESSAGE' : 'ACCESS_DENIDE'}, status=403)
 
 
 
