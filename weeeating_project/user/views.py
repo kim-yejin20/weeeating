@@ -62,7 +62,7 @@ class LoginView(View):
                     print(token)
                     print(type(token))
 
-                    return JsonResponse({'MESSAGE' : 'SUCCESS', 'AUTHORIZATION' : token}, status=200)
+                    return JsonResponse({'MESSAGE' : 'SUCCESS', 'Authorization' : token}, status=200)
                 else :
                     return JsonResponse({'MESSAGE' : 'EMAIL_OR_PASSWORD_ERROR'}, status=400)
             else :
