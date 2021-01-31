@@ -48,7 +48,9 @@ with open(CSV_PATH_INFO) as in_file :
             for tag in tags :
                 StoreTag.objects.create(store_id = store_id, tag = tag)
 
-            StoreImage.objects.create(store_id = store_id, image=image)
+        image = row[5]
+
+        StoreImage.objects.create(store_id = store_id, image=image)
 
 
 
