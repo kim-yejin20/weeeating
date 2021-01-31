@@ -8,6 +8,7 @@ from django.views import View
 from .models import Board, BoardComment
 from user.models import User
 
+#깃
 class BoardView(View):
     #@decorator
     def get(self,request): 
