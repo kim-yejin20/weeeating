@@ -86,6 +86,8 @@ class BoardDetailView(View): #상세페이지 조회,수정,삭제
         data = json.loads(request.body)
         user_id = 1
 
+        print(data)
+
         board = Board.objects.get(id=board_id)
 
         if board.writer_id == user_id :
