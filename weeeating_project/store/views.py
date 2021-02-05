@@ -1,9 +1,11 @@
 import json
 import requests
+import random
 #import jwt_utils
 import my_settings
 
 from django.http import JsonResponse
+from django.db.models import Count
 from django.views import View
 from .models import Store, StoreTag, StoreImage, StoreComment, StoreLike
 
@@ -30,23 +32,84 @@ class LikeStoreView(View): # 음식점 좋아요/안좋아요
         return JsonResponse({'MESSAGE' : 'LIKE_SUCCESS'}, status=201)
 
 
+class LikeRankView(View):
+    def get(self,request):
+        user_id = 1
+        stores = Store.objects.prefetch_related('storeimage_set','storelike_set','storetage_set')
+
+        test = Store.objects.annotate(count=Count('storelike__store_id')).order_by('-count')
+
+        info = [{
+            "id" : store.id,
+            "image" : store.storeimage_set.first().image,
+            "name" : store.name,
+            "like_count" : store.storelike_set.count(),
+            "like_state" : store.storelike_set.filter(user_id=user_id).exists()
+        } for store in test][:5]
+
+
+        return JsonResponse({'ranking' : info}, status=200)
+
+
+
+
 class StoreListView(View):
     #@decorator
     def get(self,request):
         #user_id = request.user.id
         user_id = 1
+        tag = request.GET.get('tag', None)
+        sort = request.GET.get('sort', None)
 
-        stores = Store.objects.prefetch_related('storeimage_set','storelike_set').all()
+        def info_list(tag_filter):
 
-        store_list = [{
-            "id" : store.id,
-            "image" : store.storeimage_set.first().image,
-            "name" : store.name,
-            "like_count" : store.storelike_set.count(),
-            "like_state" : store.storelike_set.filter(user_id=user_id).exists() 
-        } for store in stores]
+            stores = Store.objects.prefetch_related('storeimage_set','storelike_set','storetag_set').all()
 
-        return JsonResponse({'store_list' : store_list, "like_state" : like}, status=200)
+            info = [{
+                "id" : store.id,
+                "image" : store.storeimage_set.first().image,
+                "name" : store.name,
+                "like_count" : store.storelike_set.count(),
+                "like_state" : store.storelike_set.filter(user_id=user_id).exists()
+            } for store in tag_filter]
+
+            return info
+
+        stores = Store.objects.prefetch_related('storeimage_set','storelike_set','storetag_set').all()
+
+        if tag == 'alcohol' :
+            alcohol_list = {
+                'soju' : info_list([store for store in stores if store.storetag_set.filter(tag='soju')]),
+                'beer' : info_list([store for store in stores if store.storetag_set.filter(tag='beer')]),
+                'makgeolli' : info_list([store for store in stores if store.storetag_set.filter(tag='makgeolli')])
+            }
+
+            store_list = alcohol_list
+
+        elif tag == 'feather' :
+            feather_list = {
+                'feather' : info_list([store for store in stores if store.storetag_set.filter(tag='feather')])
+            }
+
+            store_list = feather_list
+
+        elif sort == 'random' :
+            random_info = {
+                'random' : info_list([stores.order_by("?").first()])
+            }
+            store_list = random_info
+
+ #like_ranking부분인데 수정필요함 
+        elif sort == 'like' :
+            like_rank = {
+                'like' : info_list([store for store in stores.annotate(count=Count('storelike__store_id')).order_by('-count')][:5])}
+
+            store_list = like_rank
+
+        else :
+            store_list = info_list(stores)
+
+        return JsonResponse({'store_list' : store_list}, status=200)
 
 
 class StoreDetailView(View):
