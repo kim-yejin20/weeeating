@@ -11,11 +11,9 @@ from .models import Store, StoreTag, StoreImage, StoreComment, StoreLike
 
 
 class LikeStoreView(View): # 음식점 좋아요/안좋아요 
-    #@decorator
+    @login_decorator
     def post(self,request,store_id):
-        #user_id = request.user.id
-        user_id = 1
-
+        user_id = request.user.id
 
         store = StoreLike.objects.filter(store_id=store_id, user_id=user_id)
 
@@ -32,32 +30,31 @@ class LikeStoreView(View): # 음식점 좋아요/안좋아요
         return JsonResponse({'MESSAGE' : 'LIKE_SUCCESS'}, status=201)
 
 
-class LikeRankView(View):
-    def get(self,request):
-        user_id = 1
-        stores = Store.objects.prefetch_related('storeimage_set','storelike_set','storetage_set')
-
-        test = Store.objects.annotate(count=Count('storelike__store_id')).order_by('-count')
-
-        info = [{
-            "id" : store.id,
-            "image" : store.storeimage_set.first().image,
-            "name" : store.name,
-            "like_count" : store.storelike_set.count(),
-            "like_state" : store.storelike_set.filter(user_id=user_id).exists()
-        } for store in test][:5]
-
-
-        return JsonResponse({'ranking' : info}, status=200)
-
+#class LikeRankView(View):
+#    def get(self,request):
+#        user_id = 1
+#        stores = Store.objects.prefetch_related('storeimage_set','storelike_set','storetage_set')
+#
+#        test = Store.objects.annotate(count=Count('storelike__store_id')).order_by('-count')
+#
+#        info = [{
+#            "id" : store.id,
+#            "image" : store.storeimage_set.first().image,
+#            "name" : store.name,
+#            "like_count" : store.storelike_set.count(),
+#            "like_state" : store.storelike_set.filter(user_id=user_id).exists()
+#        } for store in test][:5]
+#
+#
+#        return JsonResponse({'ranking' : info}, status=200)
+#
 
 
 
 class StoreListView(View):
-    #@decorator
+    @login_decorator
     def get(self,request):
-        #user_id = request.user.id
-        user_id = 1
+        user_id = request.user.id
         tag = request.GET.get('tag', None)
         sort = request.GET.get('sort', None)
 
@@ -113,10 +110,9 @@ class StoreListView(View):
 
 
 class StoreDetailView(View):
-    #@decorator
+    @login_decorator
     def get(self,request,store_id):
-        #user_id = request.user.id
-        user_id = 1
+        user_id = request.user.id
 
         stores = Store.objects.filter(id = store_id).all()
 
@@ -141,10 +137,9 @@ class StoreDetailView(View):
 
 
 class StoreCommentView(View):
-    #@decorator
+    @login_decorator
     def post(self,request,store_id):
-        #user_id = request.user.id
-        user_id = 1
+        user_id = request.user.id
         data = json.loads(request.body)
 
         print(data)
@@ -157,9 +152,9 @@ class StoreCommentView(View):
 
         return JsonResponse({'MESSAGE' : 'CREATE_SUCCESS'}, status=201)
 
-    #@decorator
+    @login_decorator
     def get(self,request,store_id):
-        #user_id = request.user.id
+        user_id = request.user.id
         user_id = 1
         offset = 0
         limit = 5
@@ -175,10 +170,9 @@ class StoreCommentView(View):
 
         return JsonResponse({'comment_list' : comment_list},status=200)
 
-    #@decorator
+    @login_decorator
     def patch(self,request,store_id,comment_id):
-        #user_id = request.user.id
-        user_id = 1
+        user_id = request.user.id
         data = json.loads(request.body)
         comment = StoreComment.objects.get(id = comment_id)
 
@@ -189,10 +183,9 @@ class StoreCommentView(View):
             return JsonResponse({'MESSAGE' : 'UPDATE_SUCCESS'},status =200)
         return JsonResponse({'MESSAGE' : 'ACCESS_DENIED'}, status=403)
 
-    #@decorator
+    @login_decorator
     def delete(self,request,store_id,comment_id):
-        #user_id = request.user.id
-        user_id = 1
+        user_id = request.user.id
 
         comment = StoreComment.objects.get(id = comment_id)
 
