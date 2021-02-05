@@ -10,7 +10,6 @@ from user.models import User
 
 #깃
 class BoardView(View):
-    #@decorator
     def get(self,request): 
         offset = int(request.GET.get('offset', 0))
         limit = int(request.GET.get('limit', 5))
@@ -34,13 +33,13 @@ class BoardView(View):
 
         return JsonResponse({'board_list' : board_list, "total_board" : total_board}, status=200)
 
-    #@decorator
+    @login_decorator
     def post(self,request):
-        #user_id = request.user.id 
+        user_id = request.user.id 
         data = json.loads(request.body)
 
         new_board = Board.objects.create(
-            writer_id = 1,
+            writer_id = user_id,
             #writer_id = User.objects.get(id=user_id).id,
             title = data['title'],
             content = data['content']
@@ -51,9 +50,9 @@ class BoardView(View):
 
 
 class BoardDetailView(View): #상세페이지 조회,수정,삭제
-    #@decorator
+    @login_decorator
     def get(self,request,board_id):
-        #user_id = request.user.id
+        user_id = request.user.id
         offset = int(request.GET.get('offset', 0))
         limit = int(request.GET.get('limit', 5))
 
@@ -81,11 +80,10 @@ class BoardDetailView(View): #상세페이지 조회,수정,삭제
 
         return JsonResponse({'board_info':board_detail, 'count_comments':count_comments, 'board_comments':board_comments} , status=200)
 
+    @login_decorator
     def patch(self,request,board_id):
-        #user_id = request.user_id
+        user_id = request.user.id
         data = json.loads(request.body)
-        user_id = 1
-
         print(data)
 
         board = Board.objects.get(id=board_id)
@@ -97,9 +95,9 @@ class BoardDetailView(View): #상세페이지 조회,수정,삭제
             return JsonResponse({'MESSAGE' : 'UPDATE_SUCCESS'}, status=200)
         return JsonResponse({'MESSAGE' : 'ACCESS_DENIED'}, status=403)
 
+    @login_decorator
     def delete(self,request,board_id):
-        #user_id = request.user_id
-        user_id = 1
+        user_id = request.user.id
 
         board = Board.objects.get(id=board_id)
 
@@ -110,10 +108,9 @@ class BoardDetailView(View): #상세페이지 조회,수정,삭제
 
 class BoardCommentView(View): #게시글 댓글(생성,수정,삭제) -> CommentView로 수정하기
 
-    #@decorator
+    @login_decorator
     def post(self,request,board_id):
-        #user_id = request.user.id
-        user_id = 1
+        user_id = request.user.id
         data = json.loads(request.body)
 
         print(data)
@@ -126,10 +123,9 @@ class BoardCommentView(View): #게시글 댓글(생성,수정,삭제) -> Comment
 
         return JsonResponse({'MESSAGE' : 'COMMENT_CREATE_SUCCESS'},status=201)
 
-    #@decorator
+    @login_decorator
     def patch(self,request,board_id,comment_id):
-        #user_id = request.user.id
-        user_id = 1
+        user_id = request.user.id
         data = json.loads(request.body)
         comment_writer_id = BoardComment.objects.get(id = comment_id).writer_id
 
@@ -141,9 +137,9 @@ class BoardCommentView(View): #게시글 댓글(생성,수정,삭제) -> Comment
             return JsonResponse({'MESSAGE' : 'UPDATE_SUCCESS'}, status=200)
         return JsonResponse({'MESSAGE' : 'ACCESS_DENIED'}, status=403)
 
+    @login_decorator
     def delete(self,request,board_id,comment_id):
-        #user_id = request.user.id
-        user_id = 1
+        user_id = request.user.id
 
         comment = BoardComment.objects.get(id = comment_id)
 
