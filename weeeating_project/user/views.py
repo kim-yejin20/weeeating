@@ -63,10 +63,12 @@ class LoginView(View):
                     print(jwt)
                     print(sys.version)
                     token = jwt.encode({'id' : db_email.id},SECRET_KEY,ALGORITHM)
+                    user_id = db_email.id
+                    print(user_id)
                     print(token)
                     print(type(token))
 
-                    return JsonResponse({'MESSAGE' : 'SUCCESS', 'Authorization' : token}, status=200)
+                    return JsonResponse({'MESSAGE' : 'SUCCESS', 'Authorization' : token, 'user_id' : user_id}, status=200)
                 else :
                     return JsonResponse({'MESSAGE' : 'EMAIL_OR_PASSWORD_ERROR'}, status=400)
             else :
