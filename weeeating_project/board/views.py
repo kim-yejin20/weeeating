@@ -19,34 +19,41 @@ class BoardView(View):
         if offset > total_board:
             return JsonResponse({'MESSAGE' : 'OFFSET_OUT_OF_RANGE'}, status=400)
 
-        recent_list = list(Board.objects.all().select_related('writer').prefetch_related('boardcomment_set'))
+        #recent_list = Board.objects.all().select_related('writer').prefetch_related('boardcomment_set')
+
+        recent_list = Board.objects.all().select_related('writer').prefetch_related('boardcomment_set')
+
+
+        #board_info = Board.objects.filter(id = board_id).select_related('writer').prefetch_related('boardcomment_set').all()
 
         board_list =[{
             'id' : board.id,
             'title' : board.title,
             'writer_id' : board.writer_id,
-            'writer' : board.writer.name,
+            'writer' : str(board.writer.number) + "기 " + str(board.writer.name),
             'created_at' : board.created_at.strftime("%Y-%m-%d"),
             'comments' : len([par.comment for par in board.boardcomment_set.filter(board_id = board.id)])
-        } for board in recent_list][::-1][offset:offset+limit]
+        } for board in recent_list[::-1]][offset:offset+limit]
 
 
         return JsonResponse({'board_list' : board_list, "total_board" : total_board}, status=200)
 
     @jwt_utils.login_decorator
     def post(self,request):
-        user_id = request.user.id 
+        user_id = request.user 
         data = json.loads(request.body)
 
-        new_board = Board.objects.create(
-            writer_id = user_id,
-            #writer_id = User.objects.get(id=user_id).id,
-            title = data['title'],
-            content = data['content']
-        )
+        print(data)
 
-        return JsonResponse({'MESSAGE' : 'SUCCESS'}, status=201)
+        if user_id.name != None:
+            new_board = Board.objects.create(
+                writer_id = user_id.id,
+                title = data['title'],
+                content = data['content']
+            )
 
+            return JsonResponse({'MESSAGE' : 'SUCCESS'}, status=201)
+        return JsonResponse({'MESSAGE' : 'NEED_USER_NAME'}, status=200)
 
 
 class BoardDetailView(View): #상세페이지 조회,수정,삭제
@@ -56,12 +63,12 @@ class BoardDetailView(View): #상세페이지 조회,수정,삭제
 
         board_info = Board.objects.filter(id = board_id).select_related('writer').prefetch_related('boardcomment_set').all()
 
-        comments_list = BoardComment.objects.filter(board_id = board_id).select_related('writer')
+        comments_list = list(BoardComment.objects.filter(board_id = board_id).select_related('writer'))
 
         board_detail =[{
             'title' : board.title,
             'writer_id' : board.writer.id,
-            'writer' : board.writer.name,
+            'writer' : board.writer.number + "기 " + board.writer.name,
             'content' : board.content,
             'created_at' : board.created_at.date()
         } for board in board_info]
@@ -70,23 +77,23 @@ class BoardDetailView(View): #상세페이지 조회,수정,삭제
 
         board_comments = [{
             'comment_id' : comment.id,
-            'comment_writer' : comment.writer.name,
+            'comment_writer' : comment.writer.number + "기 " + comment.writer.name,
             'comment_writer_id' : comment.writer.id,
             'comment_content' : comment.comment,
-            'comment_created_at' : comment.created_at.strftime("%Y-%m-%d %I:%M")}
+            'comment_created_at' : comment.created_at.strftime("%Y-%m-%d %H:%M")}
             for comment in comments_list][::-1][offset:offset+limit]
 
         return JsonResponse({'board_info':board_detail, 'count_comments':count_comments, 'board_comments':board_comments} , status=200)
 
     @jwt_utils.login_decorator
     def patch(self,request,board_id):
-        user_id = request.user.id
+        user_id = request.user
         data = json.loads(request.body)
         print(data)
 
         board = Board.objects.get(id=board_id)
 
-        if board.writer_id == user_id :
+        if board.writer_id == user_id.id :
             Board.objects.filter(id=board_id).update(
                 title = data['title'],
                 content = data['content'])
@@ -95,11 +102,11 @@ class BoardDetailView(View): #상세페이지 조회,수정,삭제
 
     @jwt_utils.login_decorator
     def delete(self,request,board_id):
-        user_id = request.user.id
+        user_id = request.user
 
         board = Board.objects.get(id=board_id)
 
-        if board.writer_id == user_id :
+        if board.writer_id == user_id.id :
             board.delete()
             return JsonResponse({'MESSAGE' : 'DELETE_SUCCESS'}, status=200)
         return JsonResponse({'MESSAGE' : 'ACCESS_DENIED'}, status=403)
@@ -108,18 +115,19 @@ class BoardCommentView(View): #게시글 댓글(생성,수정,삭제) -> Comment
 
     @jwt_utils.login_decorator
     def post(self,request,board_id):
-        user_id = request.user.id
+        user_id = request.user
         data = json.loads(request.body)
 
         print(data)
 
-        BoardComment.objects.create(
-            board_id = board_id,
-            writer_id = user_id,
-            comment = data['comment']
-        )
-
-        return JsonResponse({'MESSAGE' : 'COMMENT_CREATE_SUCCESS'},status=201)
+        if user_id.name != None :
+            BoardComment.objects.create(
+                board_id = board_id,
+                writer_id = user_id.id,
+                comment = data['comment']
+            )
+            return JsonResponse({'MESSAGE' : 'COMMENT_CREATE_SUCCESS'},status=201)
+        return JsonResponse({'MESSAGE' : 'NEED_USER_NAME'}, status=200)
 
     @jwt_utils.login_decorator
     def patch(self,request,board_id,comment_id):

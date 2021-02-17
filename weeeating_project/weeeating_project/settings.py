@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 import my_settings
+import os
 #my_settings 임포트 까먹지 않기 
 
 
@@ -130,6 +131,9 @@ USE_TZ = False #사용 안함으로 변경시 한국 시간으로 변경된다.
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+#MEDIA_ROOT = os.path.join (BASE_DIR, 'media')
+#MEDIA_URL = '/media/'
 
 
 #REMOVE_APPEND_SLASH_WARNING
