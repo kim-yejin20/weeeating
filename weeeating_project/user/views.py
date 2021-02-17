@@ -5,13 +5,13 @@ import jwt
 import requests
 import urllib3
 import sys
+import jwt_utils
 
 from django.http import JsonResponse
 from django.views import View
 from .models import User
 
 from my_settings import SECRET_KEY, ALGORITHM
-#from .utils import login_decorator
 
 
 
@@ -41,7 +41,12 @@ class SignUpView(View):
                     email       = data['email'],
                     password    = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8'))
 
-                return JsonResponse({'MESSAGE' : 'SUCCESS'}, status = 201)
+                db_email = User.objects.get(email=data['email'])
+
+                token = jwt.encode({'id' : db_email.id},SECRET_KEY,ALGORITHM)
+                user_id = db_email.id
+
+                return JsonResponse({'MESSAGE' : 'USER_SIGNUP_SUCCESS', 'Authorization' : token, 'user_id' :user_id}, status = 201)
 
         except KeyErro as e:
             return JsonResponse({'MESSAGE' : f'KEY_ERROR:{e}'}, status = 400)
@@ -139,13 +144,13 @@ class SocialLoginView(View):
 """
 
 class SocialLoginView(View):
-    def get(self, request):
+    def post(self, request):
         urllib3.disable_warnings()
-        access_token = request.headers['Authorization']
-        headers      = {"Authorization": f"Bearer {access_token}"}
-        url          = 'https://www.googleapis.com/userinfo/v2/me'
-        response     = requests.get(url, headers=headers, verify=False)
-        user         = response.json()
+        access_token    = request.headers['Authorization']
+        headers         = {"Authorization": f"Bearer {access_token}"}
+        url             = 'https://www.googleapis.com/userinfo/v2/me'
+        response        = requests.get(url, headers=headers, verify=False)
+        user            = response.json()
 
         print(response.text)
         print(response.status_code)
@@ -155,10 +160,36 @@ class SocialLoginView(View):
 
             #db_email= User.objects.get(email=data['email'])
             #user         = User.objects.get_or_create(social_id=user.get('id'))[0]
-            access_token = jwt.encode({'id': user.id}, SECRET_KEY, ALGORITHM) 
-            return JsonResponse({"Authorization": access_token}, status=200)
+            access_token = jwt.encode({'id': user.id}, SECRET_KEY, ALGORITHM)
+            user_id = user.id
+
+            if user.name == None : 
+                first_visit = True
+            else :
+                first_visit = False
+
+            return JsonResponse({"Authorization": access_token, "user_id" : user_id, "FRIST_VISIT" : first_visit}, status=200)
 
         return JsonResponse({"Message": "INVALID_TOKEN"}, status=401)
+
+class GoogleInfoView(View):
+    @jwt_utils.login_decorator
+    def post(self,request):
+        data = json.loads(request.body)
+
+        user_id = request.user
+
+        print(user_id)
+
+        User.objects.filter(id = user_id.id).update(
+            number = data['number'],
+            name = data['name']
+        )
+
+        return JsonResponse({'MESSAGE' : 'UPDATE_SUCCESS'}, status=201)
+
+
+
 
 
 """

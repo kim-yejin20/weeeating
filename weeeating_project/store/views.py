@@ -17,17 +17,20 @@ class LikeStoreView(View): # 음식점 좋아요/안좋아요
 
         store = StoreLike.objects.filter(store_id=store_id, user_id=user_id.id)
 
-        if store.exists() :
-            store.delete()
+        if user_id.name != None:
+            if store.exists() :
+                store.delete()
 
-            return JsonResponse({'MESSAGE' :'UNLIKE_SUCCESS'}, status=200)
+                return JsonResponse({'MESSAGE' :'UNLIKE_SUCCESS'}, status=200)
 
-        StoreLike.objects.create(
-            store_id = store_id,
-            user_id = user_id.id
-        )
+            StoreLike.objects.create(
+                store_id = store_id,
+                user_id = user_id.id
+            )
 
-        return JsonResponse({'MESSAGE' : 'LIKE_SUCCESS'}, status=201)
+            return JsonResponse({'MESSAGE' : 'LIKE_SUCCESS'}, status=201)
+
+        return JsonResponse({'MESSAGE' : 'NEED_USER_NAME'}, status=200)
 
 
 #class LikeRankView(View):
@@ -166,30 +169,32 @@ class StoreCommentView(View):
         user_id = request.user
         data = json.loads(request.body)
 
-        print(data)
+        if user_id.name != None:
+            StoreComment.objects.create(
+                comment = data['comment'],
+                store_id = store_id,
+                writer_id = user_id.id
+            )
+            return JsonResponse({'MESSAGE' : 'CREATE_SUCCESS'}, status=201)
 
-        StoreComment.objects.create(
-            comment = data['comment'],
-            store_id = store_id,
-            writer_id = user_id.id
-        )
-
-        return JsonResponse({'MESSAGE' : 'CREATE_SUCCESS'}, status=201)
+        return JsonResponse({'MESSAGE' : 'NEED_USER_NAME'}, status=200)
 
     def get(self,request,store_id):
-        offset = 0
-        limit = 5
+        offset = int(request.GET.get('offset', 0))
+        limit = int(request.GET.get('limit', 5))
 
         comments = StoreComment.objects.filter(store_id=store_id).select_related('writer').all()
+
+        count_comments = comments.count()
         comment_list = [{
             "id" : comment.id,
             "comment" : comment.comment,
-            "created_at" : comment.created_at.strftime("%Y-%m-%d %I:%M"),
+            "created_at" : comment.created_at.strftime("%Y-%m-%d %H:%M"),
             "writer_id" : comment.writer.id,
-            "writer_name" : comment.writer.name
+            "writer_name" : comment.writer.number + "기 " + comment.writer.name
         } for comment in comments][::-1][offset:offset+limit]
 
-        return JsonResponse({'comment_list' : comment_list},status=200)
+        return JsonResponse({'count_comments' : count_comments,'comment_list' : comment_list},status=200)
 
     @jwt_utils.login_decorator
     def patch(self,request,store_id,comment_id):
